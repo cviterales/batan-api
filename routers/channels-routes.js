@@ -1,7 +1,11 @@
 module.exports = app => {
   const channel = require("../controllers/channels-controller");
+  const preview = require("../controllers/previews-controller");
 
   var router = require("express").Router();
+
+  // Create a new Channel
+  router.post("/preview/update", preview.updatePreviews);
 
   // Create a new Channel
   router.post("/", channel.create);

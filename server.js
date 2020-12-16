@@ -5,7 +5,6 @@ const express = require('express');
 const app = express();
 const https = require("https");
 const fs = require("fs");
-const preview = require("./controllers/previews-controller");
 
 const corsOptions = {
   origin: "*",
@@ -33,9 +32,6 @@ db.mongoose
 });
 
 // Test
-app.get("/", (req, res) => {
-  preview.updatePreview('UCPJt1Ugnfq-ZcoXsbWziafw', res)
-});
 
 require("./routers/channels-routes")(app);
 
