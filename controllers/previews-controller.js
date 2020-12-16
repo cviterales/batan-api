@@ -63,17 +63,6 @@ const getPreviews = async (channel_id, res) => {
     .catch((err) => {
       return err;
     });
-
-  /*return [
-    {
-      publishedAt: "2020-09-02T19:08:17Z",
-      channelId: "UCBMj2hG2-SlHlgPVrOW1rGQ",
-      title: "Raices Argentinas 31 8 20",
-      description:
-        "En esta edicion N°444asd4 de Raices Argentinas entrevistamos a Griselda Cica...",
-      thumbnails: {},
-    },
-  ];*/
 };
 
 const savePreviews = async (previews) => {
