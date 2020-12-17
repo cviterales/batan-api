@@ -57,7 +57,7 @@ const getPreviews = async (channel_id, res) => {
   };
   await axios
     .get("https://www.googleapis.com/youtube/v3/search", config)
-    .then((response) => {
+    .then((resp) => {
       return formatResponses(resp.data);
     })
     .catch((err) => {
