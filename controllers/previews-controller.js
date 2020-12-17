@@ -55,7 +55,9 @@ const getPreviews = async (channel_id, res) => {
       "Content-Type": "application/json",
     },
   };
+  console.log(channel_id)
   response = await axios.get("https://www.googleapis.com/youtube/v3/search", config)
+  console.log(response.data)
   return formatResponses(response.data);
 };
 
