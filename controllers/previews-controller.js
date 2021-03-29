@@ -22,23 +22,6 @@ const formatResponses = (object) => {
   return newFormat;
 };
 
-const getChannelsIDs = (random, res) => {
-  Channel.find({})
-    .then((data) => {
-      let transformedResponse = JSON.stringify(data);
-      let channels_ids = JSON.parse(transformedResponse).map(
-        (item) => item.media.youtube_id
-      );
-      res.send(channels_ids);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message:
-          err.message || "Some error occurred while retrieving channels.",
-      });
-    });
-};
-
 const getPreviews = async (channel_id, res) => {
   const key = "AIzaSyAxgOxgraVNuvTyYdz9iy3E6DDLbOwEZwo";
   let response = [];
@@ -55,10 +38,18 @@ const getPreviews = async (channel_id, res) => {
       "Content-Type": "application/json",
     },
   };
-  console.log(channel_id)
-  response = await axios.get("https://www.googleapis.com/youtube/v3/search", config)
-  console.log(response.data)
-  return formatResponses(response.data);
+  //console.log(channel_id);
+  return await axios
+    .get("https://www.googleapis.com/youtube/v3/search", config)
+    .then((response) => {
+      return formatResponses(response.data);
+    })
+    .catch((err) => {
+      console.log("ERROR", err.response.data.error.message);
+      return response;
+    });
+
+  //return response; //formatResponses(response.data);
 };
 
 const savePreviews = async (previews) => {
@@ -94,7 +85,99 @@ const savePreviews = async (previews) => {
   });
 };
 
+exports.getInfoChannels = (random, res) => {
+  Channel.find({})
+    .then((data) => {
+      let transformedResponse = JSON.stringify(data);
+      let channels_ids = JSON.parse(transformedResponse).map((item) => {
+        return { title: item.title, yt_id: item.media.youtube_id };
+      });
+      //return channels_ids;
+      res.send(channels_ids);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving channels.",
+      });
+    });
+};
+
+const getChannelsIDs = async (res) => {
+  return Channel.find({})
+    .then((data) => {
+      let transformedResponse = JSON.stringify(data);
+      let channels_ids = JSON.parse(transformedResponse).map(
+        (item) => {
+          return { title: item.title, youtube_id: item.media.youtube_id };
+        }
+      );
+      return channels_ids;
+      //res.send(channels_ids);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message:
+          err.message || "Some error occurred while retrieving channels.",
+      });
+    });
+};
+
 exports.updatePreviews = async (req, res) => {
+  // Validate request
+  const channelsIds = await getChannelsIDs(res);
+  if (channelsIds && channelsIds.length > 0) {
+    let channelsUpdated = [];
+    for await (channel of channelsIds) {
+      const previews = await getPreviews(channel.youtube_id, res);
+      // Save channel in the database
+      //console.log("CHANNEL", channel_id, previews);
+      if (previews && previews.length > 0) {
+        await savePreviews(previews)
+        .then((err) => {
+          let updated = {
+            title: channel.title,
+            channel_id: channel.youtube_id,
+            updated: previews.length,
+          };
+          console.log("UPDATED", updated);
+          channelsUpdated.push(updated);
+        })
+        .catch((err) => {
+          let updated = {
+            title: channel.title,
+            channel_id: channel.youtube_id,
+            updated: previews.length,
+            err: err,
+          };
+          console.log("Error", updated);
+          channelsUpdated.push(updated);
+        })
+      } else {
+        let updated = {
+          title: channel.title,
+          channel_id: channel.youtube_id,
+          updated: previews.length,
+          err: "No hay videos nuevos para actualizar",
+        };
+        console.log("Error", updated);
+        channelsUpdated.push(updated);
+      }
+    }
+    if (channelsUpdated.length > 0) {
+      res.send({
+        message: "Previews update successful!",
+        updated: channelsUpdated,
+      });
+    }
+  } else {
+    res.status(500).send({
+      message: "Some error occurred while creating the Channel.",
+    });
+  }
+};
+
+exports.updatePreview = async (req, res) => {
   // Validate request
 
   if (!req.body.youtube_id) {

@@ -4,9 +4,11 @@ module.exports = app => {
 
   var router = require("express").Router();
 
-  // Create a new Channel
-  router.post("/preview/update", preview.updatePreviews);
-
+  router.get("/info", preview.getInfoChannels);
+  // Update all channels previews
+  router.get("/previews/update", preview.updatePreviews);
+  // Update a one channel previews
+  router.post("/preview/update", preview.updatePreview);
   // Create a new Channel
   router.post("/", channel.create);
 
